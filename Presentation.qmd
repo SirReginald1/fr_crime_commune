@@ -1,0 +1,48 @@
+---
+title: "R package presentation"
+title-slide-attributes:
+    data-background-image: ./images/back1.png
+    data-background-opacity: "1"
+    text-background: "white"
+author: "Hardwick Andrew"
+date: last-modified
+format: 
+  revealjs:
+    theme: theme.scss
+    output-file: Presentation.html
+    slide-number: true
+    show-slide-number: print
+editor: visual
+---
+
+## My work {background-image="images/back2.png"}
+
+<div style="padding: 20px 0;">
+My work can broadly be divided into 2 sections:
+</div>
+
+<div class="center" style="padding: 70px 0;">
+-   The data management package
+
+-   The shiny web application
+</div>
+
+## The package {background-image="images/back2.png"}
+
+
+
+## The shiny app {background-image="images/back2.png"}
+
+![What the app looks like](images/the_app.png)
+
+## The shiny app {background-image="images/back2.png"}
+<div style="padding: 20px 0;">
+To run the app use the function `run_fr_crime_app()`.
+</div>
+
+<div class="myDiv vertical-center">
+**Ignore the error message at the start when runing the app**
+</div>
+
+
+

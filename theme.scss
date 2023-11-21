@@ -1,0 +1,43 @@
+
+
+/*-- scss:rules --*/
+.myDiv {
+    border: 5px outset red;
+    background-color: lightblue;
+    text-align: center;
+    color:red;
+  }
+
+  .center {
+    text-align: center;
+  }
+  
+  .vertical-center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+  }
+
+  .title {
+    color: white;
+  }
+
+  #title-slide {
+    .title {
+      color: #ffffff;
+    }
+  
+    .subtitle {
+      font-size: 3em;
+    }
+  
+    .quarto-title-author {
+      color: #ffffff;
+    }
+
+    .date {
+        color: #ffffff;
+    }
+  }
