@@ -605,7 +605,7 @@ merge_data_set = function(line_nb, envi = .GlobalEnv){
 #'
 #' @title select_set_fr_crime_commune
 #' @param data The data on which the ploting will be based. !!! Will only take the formatted data that comes with the package. !!!
-#' @param metric By what variable the number fo counts is to be calculated: vector of column names in char format.
+#' @param metric By what variable the number of counts is to be calculated: vector of column names in char format.
 #' @param ndiff Boolean indicates if the communes with non disclosed figures should be present in the outputted data. !!! Should generally be set to FALSE. !!
 #' @param annee Vector of the last 2 digits of the year in character format.
 #' @param classe Vector containing the type of infraction in character format.
@@ -750,8 +750,6 @@ select_set_fr_crime_commune = function(data,
 #' @returns A leaflet map.
 #' @export
 render_leafmap = function(data, color, popup, labels, radius, opacity, map = "CartoDB.DarkMatter"){
-
-
 
   # Change between light an dark theme map
   if(map == TRUE){

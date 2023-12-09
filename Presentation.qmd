@@ -17,32 +17,59 @@ editor: visual
 
 ## My work {background-image="images/back2.png"}
 
-<div style="padding: 20px 0;">
+::: {style="padding: 20px 0;"}
 My work can broadly be divided into 2 sections:
-</div>
+:::
 
-<div class="center" style="padding: 70px 0;">
+::: {.center style="padding: 70px 0;"}
 -   The data management package
 
 -   The shiny web application
-</div>
+:::
 
 ## The package {background-image="images/back2.png"}
 
+::: {.center style="padding: 70px 0;"}
+The package is centred around: 
 
+-   Data management
+
+-   Downloading data
+    -   from url reposetory
+    -   from APIs
+
+
+:::
+
+## How to install the package {background-image="images/back2.png"}
+
+::: {style="padding: 20px 0;"}
+To install the package you will need to install the `devtools` package by runing:
+
+```{r, eval=FALSE, echo=TRUE}
+require(!devtools){install.packages("devtools")}
+install_github("SirReginald1/fr_crime_commune")
+library(frCrimeData)
+```
+
+If that fails to work the project can be found at the following address:
+
+::: {style="color: blue"}
+[https://github.com/SirReginald1/fr_crime_commune](https://github.com/SirReginald1/fr_crime_commune)
+:::
+
+:::
 
 ## The shiny app {background-image="images/back2.png"}
 
 ![What the app looks like](images/the_app.png)
 
-## The shiny app {background-image="images/back2.png"}
-<div style="padding: 20px 0;">
+## How to run the app {background-image="images/back2.png"}
+
+::: {style="padding: 20px 0;"}
 To run the app use the function `run_fr_crime_app()`.
-</div>
+:::
 
-<div class="myDiv vertical-center">
+::: {.myDiv .vertical-center}
 **Ignore the error message at the start when runing the app**
-</div>
-
-
-
+:::

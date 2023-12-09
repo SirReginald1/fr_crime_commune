@@ -1,0 +1,382 @@
+---
+title: "My work in R"
+author: "Andrew Hardwick"
+date: last-modified
+format:
+  html:
+    theme: cosmo
+    self-contained: true
+    toc: true
+    toc-depth: 4
+    toc-location: left
+
+---
+
+```{r, include=FALSE}
+library(leaflet)
+library(kableExtra)
+data_default = data.frame("file_name" = c("french_crime_commune.rds",
+                                                  "liste_commune_fr.rds",
+                                                  "commune_GPS_fr.rds"),
+                                  "var_names" = c("fr_crime_commune",
+                                                  "INSEE_commune_list",
+                                                  "commune_GPS_fr"),
+                                  "user_data_name" = c("French crime by commune base",
+                                                       "INSEE commune list",
+                                                       "List des communes avec coordonée GPS"),
+                                  "data_url" = c("https://www.data.gouv.fr/fr/datasets/r/3f51212c-f7d2-4aec-b899-06be6cdd1030",
+                                                 "https://www.insee.fr/fr/statistiques/fichier/6800675/v_commune_2023.csv",
+                                                 "https://www.data.gouv.fr/fr/datasets/r/dbe8a621-a9c4-4bc3-9cae-be1699c5ff25"),
+                                  "web_page" = c("https://www.data.gouv.fr/fr/datasets/bases-statistiques-communale-et-departementale-de-la-delinquance-enregistree-par-la-police-et-la-gendarmerie-nationales/#/resources",
+                                                 "https://www.insee.fr/fr/information/2560452",
+                                                 "https://www.data.gouv.fr/fr/datasets/communes-de-france-base-des-codes-postaux/"),
+                                  "date_selector" = c("p.fr-text--sm.fr-mt-0.fr-mb-3v", # CSS selector for element containing date
+                                                      "no",
+                                                      "fr-text--sm fr-mt-0 fr-mb-3v"),
+                                  "date_last_update" = as.Date(c("2023-10-12",
+                                                                 "2023-10-12",
+                                                                 "2023-10-26")),
+                                  "API_token" = c("no",
+                                                  "75ab388c-e0cf-3a96-a00e-323d383f27b4",
+                                                  "no"),
+                                  "API_function" = c("no",
+                                                     "INSEE_Commune_Data",
+                                                     "no"),
+                                  "token_time_stamp" = c("no",
+                                                         "2023-10-17 08:26:03 CEST",
+                                                         "no"),
+                                  "data_set" = c("set_fr_crime_commune", # The data set that is
+                                                 "set_fr_crime_commune",
+                                                 "set_fr_crime_commune"),
+                                  "merge_order" = c(3,
+                                                    2,
+                                                    1),
+                                  "merg_sufix" = c(".fr_crime",
+                                                   ".INSEE",
+                                                   ".GPS"),
+                                  "merg_col" = c("CODGEO_2023",           # The name of the columns used to merge them into a dataset
+                                                 "code",
+                                                 "code_commune_INSEE"),
+                                  "var_type" = c("11122211111111", # The type of each variable 1 = numeric, 2 = char, 3 = date
+                                                 "11223212",
+                                                 "121221112221212")
+                                  )
+
+data_sets = data.frame("file_name" = c("set_fr_crime_commune.csv"),
+                              "var_names" = c("set_fr_crime_commune"),
+                              "user_data_name" = c("French crime by commune"),
+                              "date_last_update" = c("1999-10-12"),
+                              "data_set" = c("set_fr_crime_commune")
+                      )
+```
+
+# Intro
+
+My work in R can be divided into 2 parts:
+
+-   A data management package. Designed to automate data management for data that is hosted at various online sources.
+
+-   An interactive shiny map of crime by commune on French territories.
+
+The following document will go in to more detail on both of these elements. We will start with the data management package.
+
+# The `frCrimeData` package
+
+Before the package is presented however, three notes should be made regarding some of the choices in function structure.
+
+The first, is that the package was built so as to develop as wide a range of skills in R as possible in the limited time allocated to this project while trying to remain around the core concept of data management. This means that some of the design choices may seem needlessly complicated, suboptimal, unpolished or unfinished.
+
+The second, is that the package was designed with the idea of managing data for a shiny app **and** server. This design choice to make it adaptable for **both** apps and servers is at the root of some of the clumsy design choices in the function construction. This is mentioned now so that the reader is not to confused as to some of the code is shown later.
+
+The third is that most of the functions are designed to be used around a reference table containing all of the relevant data sets. This is done to facilitate the adding and manipulation of each data set. So that functions need only be called with the relevant line number in the reference table to gain access to all relevant data to the data set.
+
+Now with those warnings out of the way, First the reference tables will briefly be presented so as to better understand how some of the functions work. Then the package will be presented in order of what I have learnt during it's development. As learning to better use R was the main objective of this project.
+
+## Reference tables
+
+There are 2 reference tables. One for the individual data sets, and one for the merged data sets made up on individual data sets.
+
+This is the data sets table called `data_default`.
+
+```{r, echo=FALSE}
+kable(data_default)
+```
+
+It contains the following columns:
+
+-   file_name: The name of the file to be saved as, or loaded from.
+
+-   var_names: Name of the file in the environment.
+
+-   user_data_name: The name of the data set when printed in the user interface.
+
+-   data_url: The url at which the data can be downloaded.
+
+-   web_page: The web page containing the date the data was last updated and that presented the data.
+
+-   data_selector: The CSS selector used to identify the date on the web page.
+
+-   date_last_update: The date the data was last updated. To be compared to the one on the web page.
+
+-   API_token: The API token needed to identify user to API.
+
+-   API_function: The name of the function called to connect to particular API.
+
+-   token_time_stamp: The time stamp of the last time the token was updated. (To reduce internet traffic)
+
+-   data_set: The merged data set it is part of. (Used when auto merging data sets)
+
+-   merge_order: The order in which this data set must be merged in to it's merged data set.
+
+-   merg_sufix: Suffix to be added to column name if 2 merged data sets have de same column name.
+
+-   merg_col: The name of the column used to merge data set.
+
+-   var_type: The list of codes used to identify the variable type of each column. (Used in auto retrieval and formating of data)
+
+This is the merged data sets table called `data_sets`.
+
+```{r, echo=FALSE}
+kable(data_sets)
+```
+
+It contains the following columns:
+
+-   file_name: The name of the file to be saved as, or loaded from.
+
+-   var_names: Name of the file in the environment.
+
+-   user_data_name: The name of the data set when printed in the user interface.
+
+-   date_last_update: The date the data was last updated. (Checks updates for all component data sets)
+
+-   data_set: The name used to identify component data sets.
+
+## Web scraping
+
+The following function is an example of using web scraping:
+
+```{r, echo=TRUE, eval=FALSE}
+get_date_scrape = function(url, selector){
+  page = read_html(url)
+  element = html_element(page,selector)
+  return(format_date_scrape(trim_string(html_text(element))))
+}
+```
+
+`read_html(url)` reads the code for the html page.
+
+`html_element(page,selector)` selects the element containing the date, based on it's Css selector.
+
+## API connections
+
+The following functions are examples of connecting to an API:
+
+Requesting API token using app's Authorization:
+
+```{r, echo=TRUE, eval=FALSE}
+get_INSEE_token = function(){
+
+  headers = c(
+    `Authorization` = 'Basic *********************************************************',
+    `Content-Type` = 'application/x-www-form-urlencoded'
+  )
+
+  data = list(
+    `grant_type` = 'client_credentials'
+  )
+
+  res = httr::POST(url = 'https://api.insee.fr/token', httr::add_headers(.headers=headers), body = data, encode = 'form', config = httr::config(ssl_verifypeer = FALSE))
+
+
+  return(substr(rawToChar(res$content), 18,53))
+}
+```
+
+Downloading data using API token:
+
+```{r, echo=TRUE, eval=FALSE}
+get_INSEE_Commune_Data_API = function(token = ""){
+
+  headers = c(
+    `Accept` = 'application/json',
+    `Authorization` = paste('Bearer', token,sep = " "))
+
+  params = list(
+    `com` = 'true')
+  tryCatch({temp =  httr::GET(url = 'https://api.insee.fr/metadonnees/V1/geo/communes', httr::add_headers(.headers=headers), query = params)},
+           error = function(e){
+             stop(error_failed_connection)
+           })
+
+
+  switch(as.character(temp$status_code),
+         "200" = {user_message = "Download successful"},
+         "401" = {user_message = "Authentication requiered!"},
+         "404" = {user_message = "Resource not found! Resource may no longer exist!"},
+         "500" = {user_message = "The server experienced an error!"})
+
+  return(list(user_message,fromJSON(rawToChar(temp$content))))
+}
+```
+
+## Geting data from https requests
+
+The following function is an example of getting the last updated date from https request:
+
+```{r, echo=TRUE, eval=FALSE}
+get_date_head = function(url){
+  date = httr::HEAD(url)$headers$`last-modified`
+  return(format_date(substr(date,6,16)))
+}
+```
+
+## Manipulatig files
+
+The following function is an example of accessing file contents without downloading file and decompressing file:
+
+```{r, echo=TRUE, eval=FALSE}
+get_data = function(url, file_name, API_function = "no", token = "no"){
+  # If data dosn't have an API connection
+  if(token == "no"){
+    # Returns custom error if failed to connect
+    tryCatch({lines = readLines(con = gzcon(url(url)), n=4)
+    user_message = "Download successful"},
+    error = function(e){
+      stop(error_failed_connection)
+    })
+
+    lines = paste(lines,collapse = "")
+    semi_colon_count = lengths(regmatches(lines, gregexpr(";", lines)))
+    coma_count = lengths(regmatches(lines, gregexpr(",", lines)))
+
+
+    if(coma_count>semi_colon_count){
+      data = read.table(textConnection(readLines(gzcon(url(url)))), sep = ",", header = TRUE)
+    }
+    else{
+      data = read.table(textConnection(readLines(gzcon(url(url)))), sep = ";", header = TRUE)
+    }
+  }
+```
+
+`readLines(con = gzcon(url(url)), n=4)` reads first 4 lines of file to see what separator is used.
+
+`read.table(textConnection(readLines(gzcon(url(url)))), sep = ",", header = TRUE)` decompresses file and converts it to csv.
+
+## Making custom errors for function user feedback
+
+The following function is an example of creating custom errors for better user feedback:
+
+```{r, echo=TRUE, eval=FALSE}
+#' @author Hadley Wickham
+condition = function(subclass, message, call = sys.call(-1), ...) {
+  structure(
+    class = c(subclass, "condition"),
+    list(message = message, call = call),
+    ...
+  )
+}
+```
+
+To examples of custom errors:
+
+```{r, echo=TRUE, eval=FALSE}
+error_failed_connection = condition(c("failed_connection", "error"), "Faild to connect to file location!")
+
+invalid_input = condition(c("invalid_input", "error"), "The input of the function is invalid!")
+```
+
+## List of functions
+
+The list of all the functions in the package. For more information about each function you can look at the documentation for each function once the package is downloaded.
+
+### For data managment
+
+The following functions are general purpose data managment functions:
+
+-   `condition()`: Creates a custom condition to be raised during errors.
+
+-   `is_in_string()`:
+
+-   `get_url_file.gz()`: Fetches the gz compressed file at specified url.
+
+-   `trim_string()`: Trimes both sides of the given string of all characters that are not numbers or letters.
+
+-   `multi_string_input()`: Function used to split single string search inputs into appropriate input for data selection function.
+
+-   `format_date_scrape()`: Formats dates from raw untidy string into usable date format.
+
+-   `format_date()`: Formats dates from raw untidy string into usable date format.
+
+-   `get_date_scrape()`: Scrapes the given web page for the contense of the element identified by the CSS selector.
+
+-   `get_date_head()`: Retrieves the date from httr request header.
+
+-   `get_data()`: Downloads the data at the given url and saves it as the given file name to the Data directory in the current working directory.
+
+-   `check_for_updates()`: Check for updates.
+
+-   `update_data()`: Check default_data reference table for updates, can take dataset name as parameter.
+
+-   `update_all_data()`: Updates all data in the data_default table using the `update_data` function.
+
+-   `update_dataset()`: Updates a merged data set.
+
+-   `is.gzfile()`: Tests to see if the given file type is a gzfile.
+
+-   `get_INSEE_token()`: Gets a new accsses token for the INSEE API.
+
+-   `get_INSEE_Commune_Data_API()`: Downloads the commune data from INSEE using there API.
+
+-   `format_col()`: Given the line number of the corresponding data in data_default and the environment in which the data must be changed will set the data types to data types found data_default\$var_type.
+
+-   `format_col_vect()`: Will set the data types to data types found in given vector.
+
+-   `merge_data_set()`: Given the line number in the data_sets table will reconstruct the data set in question from it's constituent data sets and assign it to it's variable name.
+
+### Specific to shiny app
+
+The following functions designed specifically for use in the shiny app:
+
+-   `select_set_fr_crime_commune()`: Selects the data frame to be used for ploting selects data.
+
+-   `render_leafmap()`: Render leaflet map enable the selection of which elements (colour, size, etc) governs what graphical element.
+
+-   `run_fr_crime_app()`: Runs the French crime by commune app.
+
+# The `frCrimeData` Shiny app
+
+The shiny app is based on data published by the French government's publicly available data. The data can be found [here](https://www.data.gouv.fr/fr/datasets/bases-statistiques-communale-et-departementale-de-la-delinquance-enregistree-par-la-police-et-la-gendarmerie-nationales/#/resources).  
+  
+The app is an interactive map that allows the user to explore the crimes by commune in all French territories depending on offense type, commune population, number of offences, etc... The map is based on the [leaflet](https://leafletjs.com/) framework. Here is an example:
+
+```{r, warning=FALSE, echo=FALSE}
+leaflet() %>%
+  addTiles() %>%
+  addMarkers(lng=174.768, lat=-36.852, popup="The birthplace of R") %>%
+  addProviderTiles("CartoDB.DarkMatter")
+```
+
+A warning must be made as the data base for the map is comprised of over 3 million observations. So some computers may have trouble ruining the app.
+
+
+The app uses the functions in the previously presented package. All the functions used render the map, or select subsets of the data where designed to be modular so as to allow them to be used in different ways. Such as the inclusion of the `metric` parameter in the `select_set_fr_crime_commune` function, which allows to select by what variable the number of counts is to be calculated. This must be the number of communes for a map, but if wanting to build a table one might want to calculates the number of counts by year in stead of by commune.
+
+As with the previous section the rest of this section will be organized by what was learnt during this project.
+
+## Using shiny
+
+The use of the `Shiny` package to construct interactive web applications.
+
+### Reactivity
+
+The use of reactivity allowing for dynamic interactive applications.
+
+## Manipulating spacial data
+
+Although not directly related to the preview of this class, which learning the workings of the R programming language, this project allowed better understanding of using spatial data.
+
+## Using interactive leaflet maps
+
+Learning to use the most popular interactive map framework on the web to plot spacial data in R Shiny.
