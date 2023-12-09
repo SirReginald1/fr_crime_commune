@@ -4,9 +4,7 @@ Title: French crime by comune
 Version: 0.1.0
 Author: Andrew Hardwick
 Maintainer: Andrew.Hardwick@etu.univ-grenoble-alpes.fr
-Description: A Shiny web app with interactive map showing the number of crimes by commune in france. 
-    Use four spaces when indenting paragraphs within the Description.
+Description: A Shiny web app with interactive map showing the number of crimes by commune in france.
 License: GPL
 Encoding: UTF-8
-LazyData: false
 RoxygenNote: 7.2.3
