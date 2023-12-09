@@ -47,7 +47,7 @@ The package is centred around:
 To install the package you will need to install the `devtools` package by runing:
 
 ```{r, eval=FALSE, echo=TRUE}
-require(!devtools){install.packages("devtools")}
+if(!require(devtools)){install.packages("devtools")}
 install_github("SirReginald1/fr_crime_commune")
 library(frCrimeData)
 ```

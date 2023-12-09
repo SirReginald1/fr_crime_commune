@@ -358,6 +358,7 @@ leaflet() %>%
   addProviderTiles("CartoDB.DarkMatter")
 ```
 
+
 A warning must be made as the data base for the map is comprised of over 3 million observations. So some computers may have trouble ruining the app.
 
 
